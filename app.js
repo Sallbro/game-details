@@ -117,6 +117,32 @@ app.get('/single_game/:id', async (req, res) => {
         const release_date = $("#game_highlights > div.rightcol > div > div.glance_ctn_responsive_left > div.release_date > div.date").text();
         result.release_date = release_date;
 
+        // pricing section
+        const pricing = [];
+        // free pricing
+        $("#game_area_purchase > div.game_area_purchase_game").map(function (i, e) {
+            const name = $(this).find("h1").text().replace(/\t/g, '').trim();
+            const price = $(this).find("div.game_purchase_action > div.game_purchase_action_bg > div.price").text().trim();
+            if (name && price) {
+                pricing.push({
+                    name,
+                    price
+                });
+            }
+        });
+        // paid pricing
+        $("#game_area_purchase > div.game_area_purchase_game_wrapper").map(function (i, e) {
+            const name = $(this).find("div.game_area_purchase_game > h1").text().replace(/\t/g, '').trim();
+            const price = $(this).find("div.game_area_purchase_game > div.game_purchase_action > div.game_purchase_action_bg > div.price").text().trim();
+            if (name && price) {
+                pricing.push({
+                    name,
+                    price
+                });
+            }
+        });
+        result.pricing = pricing;
+
         // get external links
         const external_links = [];
         let website = $("#appDetailsUnderlinedLinks > div > div > div:nth-child(2) > a:nth-child(1)").attr("href");
@@ -479,6 +505,72 @@ app.get('/requirements/:id', async (req, res) => {
                 }
             }
         });
+        res.status(200).send(result);
+        res.end();
+
+    }).catch((err) => {
+        console.error(err);
+        res.end();
+    });
+
+});
+
+//pricing
+app.get('/pricing/:id', async (req, res) => {
+
+    const game_id = req.params.id;
+    // actual url 
+    let act_url = process.env['GET_SINGLE_GAME_URL'];
+    act_url = act_url.replace("${game_id}", game_id);
+
+    let set_header = {
+        headers: {
+            'Cookie': 'birthtime=1007145001'
+        }
+    };
+
+    axios.get(act_url, set_header).then((response) => {
+        const html = response.data;
+        const $ = cheerio.load(html);
+        const result = {};
+
+        // pricing section
+        const pricing = [];
+        // free pricing
+        $("#game_area_purchase > div.game_area_purchase_game").map(function (i, e) {
+            const name = $(this).find("h1").text().replace(/\t/g, '').trim();
+            const price = $(this).find("div.game_purchase_action > div.game_purchase_action_bg > div.price").text().trim();
+            if (name && price) {
+                pricing.push({
+                    name,
+                    price
+                });
+            }
+        });
+        // paid pricing
+        $("#game_area_purchase > div.game_area_purchase_game_wrapper").map(function (i, e) {
+            const name = $(this).find("div.game_area_purchase_game > h1").text().replace(/\t/g, '').trim();
+            const price = $(this).find("div.game_area_purchase_game > div.game_purchase_action > div.game_purchase_action_bg > div.price").text().trim();
+            if (name && price) {
+                pricing.push({
+                    name,
+                    price
+                });
+            }
+        });
+        // bundle pricing
+        // $("#game_area_purchase > div.game_area_purchase_game_wrapper").map(function (i, e) {
+        //     const name = $(this).find("div.game_area_purchase_game > h1").text().replace(/\t/g, '').trim();
+        //     const price = $(this).find("div.game_area_purchase_game > div.game_purchase_action > div.game_purchase_action_bg > div.price").text().trim();
+        //     if (name && price) {
+        //         pricing.push({
+        //             name,
+        //             price
+        //         });
+        //     }
+        // });
+        result.pricing = pricing;
+
         res.status(200).send(result);
         res.end();
 
@@ -970,7 +1062,7 @@ app.get('/news/:category/:id', async (req, res) => {
 
     //check the limit 
     if (limit > 10 && limit < 100) {
-        for (var i = 1+offset; i <= Math.ceil((Number(limit) / 10))+offset; i++) {
+        for (var i = 1 + offset; i <= Math.ceil((Number(limit) / 10)) + offset; i++) {
             let env_dir_rev_url = direct_news_url;
             env_dir_rev_url = env_dir_rev_url.replace(/\${env_newspageno}/g, i).replace(/\${env_newscategory}/g, category).replace("${env_announcementsoffset}", (i - 1) * 10).replace("${env_game_id}", id);
 
