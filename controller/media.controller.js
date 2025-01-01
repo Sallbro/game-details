@@ -3,51 +3,26 @@ const axios = require('axios');
 
 exports.screenshots = async (req, res, next) => {
     const id = req.params.id;
-    const limit = req.query.limit;
-    const offset = Math.ceil(Number(req.query.offset) / 10) > 0 ? Math.ceil(Number(req.query.offset) / 10) : 0;
+    const limit = req.query.limit || 10;
+    const offset = req.query.offset || 0;
 
     // actual url 
-    let screenshot_url = process.env['SCREENSHOTS_URL'];
-    screenshot_url = screenshot_url.replace("${env_game_id}", id);
+    // let screenshot_url = process.env['SCREENSHOTS_URL'];
+    // screenshot_url = screenshot_url.replace("${env_game_id}", id);
 
     //direct review url
     let direct_screenshot_url = process.env['DIRECT_SCREENSHOTS_URL'];
-
-    //endpoints
-    let endpoints = [];
-
-    //check the limit 
-    if (limit > 10 && limit < 100) {
-        for (var i = 1 + offset; i <= Math.ceil((Number(limit) / 10)) + offset; i++) {
-            let env_dir_rev_url = direct_screenshot_url;
-            env_dir_rev_url = env_dir_rev_url.replace(/\${env_screenshotspageno}/g, i).replace("${env_game_id}", id);
-            endpoints.push(env_dir_rev_url);
-        }
-    }
-    else {
-        let env_dir_rev_url = direct_screenshot_url;
-        env_dir_rev_url = env_dir_rev_url.replace(/\${env_screenshotspageno}/g, 1).replace("${env_game_id}", id);
-
-        endpoints.push(env_dir_rev_url);
-    }
+    direct_screenshot_url = direct_screenshot_url.replace("${env_game_id}", id).replace("${env_offset}", offset).replace("${env_limit}", limit);
 
     //start requesting
-    axios.all(endpoints.map(async (endpoint) => {
-        let get_reviews = [];
-        await axios.get(endpoint).then((response) => {
-            const html = response.data;
-            const $ = cheerio.load(html);
-            $("div.apphub_Card > div.apphub_CardContentClickable > div.apphub_CardContentPreviewImageBorder > div.apphub_CardContentMain").map(function (i, el) {
-                let img = $(el).find("img.apphub_CardContentPreviewImage").attr("src");
-                get_reviews.push(img);
-            });
-        })
-        return get_reviews;
-    })).then((data) => {
-        const final_data = [];
-        for (x of data) {
-            final_data.push(...x);
-        }
+    axios.get(direct_screenshot_url).then((response) => {
+        const html = response.data;
+        const $ = cheerio.load(html);
+        let screenshot = [];
+        $("div.apphub_Card > div.apphub_CardContentClickable > div.apphub_CardContentPreviewImageBorder > div.apphub_CardContentMain").map(function (i, el) {
+            let img = $(el).find("img.apphub_CardContentPreviewImage").attr("src");
+            screenshot.push(img);
+        });
         res.send(final_data);
         res.end();
     }).catch((err) => {
@@ -147,7 +122,6 @@ exports.broadcasts = async (req, res, next) => {
     });
     next();
 }
-
 exports.artwork = async (req, res, next) => {
     const id = req.params.id;
     const limit = req.query.limit;
