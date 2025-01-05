@@ -4,6 +4,8 @@ const v2Router = require('./router/v2');
 const { globalErrorHandler } = require('./helper/errorHandler');
 const app = express();
 const port = process.env['PORT'] || 9330;
+const dotenv = require('dotenv');
+dotenv.config();
 
 app.get('/', (req, res) => {
     try {

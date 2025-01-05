@@ -958,7 +958,7 @@ app.get('/reviews/:category/:id', (req, res) => {
     const limit = req.query.limit;
     const offset = Math.ceil(Number(req.query.offset) / 10) > 0 ? Math.ceil(Number(req.query.offset) / 10) : 0;
 
-
+    console.log(offset);
     // actual url 
     let review_url = process.env['REVIEWS_URL'];
     review_url = review_url.replace("${env_game_id}", id);
