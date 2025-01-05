@@ -20,7 +20,7 @@ v1Router.use('/gameinfo', gameInfoRouter);
 v1Router.use('/devinfo', devInfoRouter);
 v1Router.use('/guides', guideRouter);
 v1Router.use('/media', mediaRouter);
-v1Router.use('/review', reviewRouter);
+v1Router.use('/reviews', reviewRouter);
 v1Router.use('/news', newsRouter);
 
 
