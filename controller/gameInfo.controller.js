@@ -268,12 +268,14 @@ exports.single_game = async (req, res, next) => {
 
         res.status(200).send(result);
         res.end();
+        next();
 
     }).catch((err) => {
         console.error(err);
         res.end();
+        next();
+
     });
-    next();
 }
 
 exports.about_game = async (req, res, next) => {
@@ -301,12 +303,14 @@ exports.about_game = async (req, res, next) => {
 
         res.status(200).send(result);
         res.end();
+        next();
 
     }).catch((err) => {
         console.error(err);
         res.end();
+        next();
+
     });
-    next();
 }
 
 exports.requirements = async (req, res, next) => {
@@ -418,12 +422,14 @@ exports.requirements = async (req, res, next) => {
         });
         res.status(200).send(result);
         res.end();
+        next();
 
     }).catch((err) => {
         console.error(err);
         res.end();
+        next();
+
     });
-    next();
 }
 
 exports.tags = async (req, res, next) => {
@@ -452,12 +458,14 @@ exports.tags = async (req, res, next) => {
 
         res.status(200).send(result);
         res.end();
+        next();
 
     }).catch((err) => {
         console.error(err);
         res.end();
+        next();
+
     });
-    next();
 }
 
 exports.languages_supported = async (req, res, next) => {
@@ -486,12 +494,14 @@ exports.languages_supported = async (req, res, next) => {
 
         res.status(200).send(result);
         res.end();
+        next();
 
     }).catch((err) => {
         console.error(err);
         res.end();
+        next();
+
     });
-    next();
 }
 
 exports.external_links = async (req, res, next) => {
@@ -551,10 +561,12 @@ exports.external_links = async (req, res, next) => {
 
         res.status(200).send(result);
         res.end();
+        next();
 
     }).catch((err) => {
         console.error(err);
         res.end();
+        next();
+
     });
-    next();
 }
