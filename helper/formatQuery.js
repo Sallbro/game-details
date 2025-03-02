@@ -21,7 +21,6 @@ exports.mediaFormatQuery = ({ limit, offset } = query) => {
     };
 }
 
-
 exports.reviewFormatQuery = ({ limit, offset } = query) => {
     const startpageno = Math.ceil(Number(offset) / 10);
     const endpageno = startpageno + Math.floor(Number(limit) / 10);
@@ -36,4 +35,8 @@ exports.reviewFormatQuery = ({ limit, offset } = query) => {
         startleave,
         endleave
     };
+}
+
+exports.formateData=(data)=>{
+    return data.replace(/\n/g, "").replace(/\r/g, "").replace(/\t/g, "");
 }

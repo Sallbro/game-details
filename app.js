@@ -1,6 +1,5 @@
 const express = require('express');
 const v1Router = require('./router/v1');
-const v2Router = require('./router/v2');
 const { globalErrorHandler } = require('./helper/errorHandler');
 const app = express();
 const port = process.env['PORT'] || 9330;
@@ -17,7 +16,6 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/v1', v1Router);
-app.use('/api/v2', v2Router);
 
 app.use(globalErrorHandler);
 
