@@ -87,28 +87,24 @@ exports.single_game = async (req, res, next) => {
             let name = $(`#appDetailsUnderlinedLinks > div > div > div:nth-child(2) > a:nth-child(${i}) > span`).text();
             switch (name) {
                 case "YouTube":
-                    console.log(name);
                     external_links.push({
                         "name": "YouTube",
                         "link": decodeURIComponent($(`#appDetailsUnderlinedLinks > div > div > div:nth-child(2) > a:nth-child(${i})`).attr("href")).replace("https://steamcommunity.com/linkfilter/?u=", "")
                     });
                     break;
                 case "X":
-                    console.log(name);
                     external_links.push({
                         "name": "X",
                         "link": decodeURIComponent($(`#appDetailsUnderlinedLinks > div > div > div:nth-child(2) > a:nth-child(${i})`).attr("href")).replace("https://steamcommunity.com/linkfilter/?u=", "")
                     });
                     break;
                 case "Instagram":
-                    console.log(name);
                     external_links.push({
                         "name": "Instagram",
                         "link": decodeURIComponent($(`#appDetailsUnderlinedLinks > div > div > div:nth-child(2) > a:nth-child(${i})`).attr("href")).replace("https://steamcommunity.com/linkfilter/?u=", "")
                     });
                     break;
                 case "Facebook":
-                    console.log(name);
                     external_links.push({
                         "name": "Facebook",
                         "link": decodeURIComponent($(`#appDetailsUnderlinedLinks > div > div > div:nth-child(2) > a:nth-child(${i})`).attr("href")).replace("https://steamcommunity.com/linkfilter/?u=", "")
@@ -179,7 +175,7 @@ exports.single_game = async (req, res, next) => {
         });
 
         // get videos
-        let video_url = process.env['VIDEO_URL'];
+        let video_url = process.env['VIDEO_URL_MAKER'];
         $("#highlight_strip_scroll > div > img").each(function () {
             if ($(this).attr("class") == "movie_thumb") {
                 let str = $(this).attr("src");

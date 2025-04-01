@@ -15,7 +15,6 @@ exports.mediaFormatQuery = ({ limit, offset } = query) => {
     // const endpageno = Math.floor(((Number(offset) / 10) - newpageno) * 10); // fundamental limitation of binary floating-point arithmetics 
     const leave = Math.abs(((Number(offset) / 10) * 10) - 10);
     const newlimit = Number(limit) + leave;
-    console.log(startpageno, leave);
     return {
         startpageno, leave, newlimit
     };

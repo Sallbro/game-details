@@ -16,7 +16,7 @@ exports.screenshots = async (req, res, next) => {
     const { startpageno, endpageno, startskip, endskip } = reviewFormatQuery({ limit, offset });
 
     // set screenshot url
-    let direct_screenshot_url = process.env['DIRECT_SCREENSHOTS_URL'];
+    let direct_screenshot_url = process.env['SCREENSHOTS_URL'];
     direct_screenshot_url = direct_screenshot_url.replace("${env_game_id}", id);
 
     // fetch all endpoints url
@@ -76,7 +76,7 @@ exports.videos = async (req, res, next) => {
     const { startpageno, endpageno, startskip, endskip } = reviewFormatQuery({ limit, offset });
 
     // set direct video url
-    let direct_video_url = process.env['DIRECT_VIDEOS_URL'];
+    let direct_video_url = process.env['VIDEOS_URL'];
     direct_video_url = direct_video_url.replace("${env_game_id}", id);
 
     // fetch all endpoints url

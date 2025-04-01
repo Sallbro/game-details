@@ -43,7 +43,6 @@ exports.pageNo = async (req, res, next) => {
         const counts = $(".search_pagination > .search_pagination_left").text().trim();
         const total = counts.match((/(?<=of )\d+/));
         const total_page = total ? Math.ceil(Number(total[0]) / 25) : "";
-        console.log("counts ", counts);
         return successHandler({
             req, res, data: {
                 pages,
