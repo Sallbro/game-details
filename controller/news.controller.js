@@ -1,110 +1,104 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
+const { newsCategory } = require('../helper/enum');
+const { reviewFormatQuery } = require('../helper/formatQuery');
+const { serverError, successHandler, badRequest } = require('../helper/response');
 
-exports.allnews = async (req, res, next) => {
+exports.news = async (req, res, next) => {
     const id = req.params.id;
-    const category = allnews;
+    const category = req.params.news_category;
+    const language = req.query.language || "english";
     const limit = req.query.limit || 10;
     const offset = req.query.offset || 0;
 
-    const { newpageno, leave, newlimit } = formatQuery({ limit, offset });
+    if (!id) {
+        return badRequest({ req, res, message: "Game id is required" });
+    }
 
-    //direct review url
-    let direct_news_url = process.env['DIRECT_NEWS_URL'];
-    direct_news_url = artwork_url.replace("${env_newscategory}", category).replace("${env_game_id}", id).replace("/\${env_pageno}/g", newpageno).replace("${env_offset}", offset).replace("${env_limit}", newlimit);
+    const { startpageno, endpageno, startskip, endskip } = reviewFormatQuery({ limit, offset });
 
-    //start requesting
-    axios.get(direct_news_url).then((response) => {
-        const html = response.data;
-        const $ = cheerio.load(html);
-        let all_reviews = [];
-        $("div.apphub_Card").each(function () {
-            let obj_review = {};
-            $(this).after("div.apphub_CardContentMain").map(function (i, el) {
-                let news_title = $(el).find(".apphub_CardContentNewsTitle").text();
-                let date = $(el).find("div.apphub_CardContentNewsDate").text().trim();
-                obj_review.news_title = news_title;
-                obj_review.date = date;
-            });
-            $(this).after("div.apphub_CardContentNewsDesc").map(function (i, el) {
-                let content = "";
-                $(el).find("ul.bb_ul li").map(function (i, el) {
-                    content += $(el).text();
+    // check category of news 
+    const arrayNewsCategory = newsCategory || [];
+    if (!arrayNewsCategory.includes(category)) {
+        return badRequest({ req, res, message: "invalid news category" });
+    }
+
+    // set news url
+    let news_url;
+    if (category == "announcements") {
+        news_url = process.env['OFFICIAL_ANNOUNCEMENTS__NEWS_URL'];
+    } else if (category == "syndicated") {
+        news_url = process.env['SYNDICATED_NEWS_URL'];
+    }
+    else {
+        news_url = process.env['ALL_NEWS_URL'];
+    }
+    news_url = news_url.replace("${env_game_id}", id).replace("${env_language}", language);
+
+    // fetch all endpoints url
+    let endpoints = [];
+    for (var i = startpageno; i < endpageno; i++) {
+        let env_dir_rev_url = news_url;
+        env_dir_rev_url = env_dir_rev_url.replace(/\${env_pageno}/g, i);
+        endpoints.push(env_dir_rev_url);
+    }
+
+    // start requesting
+    axios.all(endpoints.map(async (endpoint) => {
+        let get_news = [];
+        //start requesting
+        await axios.get(endpoint).then((response) => {
+            const html = response.data;
+            const $ = cheerio.load(html);
+            let news = [];
+            $("div.apphub_Card").each(function () {
+                let obj_review = {};
+                $(this).after("div.apphub_CardContentMain").map(function (i, el) {
+                    let news_title = $(el).find(".apphub_CardContentNewsTitle").text();
+                    let date = $(el).find("div.apphub_CardContentNewsDate").text().trim();
+                    obj_review.news_title = news_title;
+                    obj_review.date = date;
                 });
-                if (content == "") {
-                    const clone_content = $(el).find("div.apphub_CardTextContent").clone();
-                    clone_content.children().remove();
-                    content = $(clone_content).text();
-                }
-                obj_review.content = content;
-            });
-            $(this).after("div.apphub_CardContentAuthorBlock").map(function (i, el) {
-                let like = $(el).find("div.apphub_CardRating.news.rateUp").text();
-                obj_review.like = like;
-            });
-
-            get_reviews.push(obj_review);
-        });
-        res.send(all_reviews);
-        res.end();
-        next();
-    }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
-    });
-}
-
-exports.announcements = async (req, res, next) => {
-    const id = req.params.id;
-    const category = announcements;
-    const limit = req.query.limit;
-    const offset = req.query.offset || 0;
-
-    const { newpageno, leave, newlimit } = formatQuery({ limit, offset });
-
-    //direct review url
-    let direct_news_url = process.env['DIRECT_NEWS_URL'];
-    direct_news_url = artwork_url.replace("${env_newscategory}", category).replace("${env_game_id}", id).replace("/\${env_pageno}/g", newpageno).replace("${env_offset}", offset).replace("${env_limit}", newlimit);
-
-    //start requesting
-    axios.get(endpoint).then((response) => {
-        const html = response.data;
-        const $ = cheerio.load(html);
-        let all_reviews = [];
-        $("div.apphub_Card").each(function () {
-            let obj_review = {};
-            $(this).after("div.apphub_CardContentMain").map(function (i, el) {
-                let news_title = $(el).find(".apphub_CardContentNewsTitle").text();
-                let date = $(el).find("div.apphub_CardContentNewsDate").text().trim();
-                obj_review.news_title = news_title;
-                obj_review.date = date;
-            });
-            $(this).after("div.apphub_CardContentNewsDesc").map(function (i, el) {
-                let content = "";
-                $(el).find("ul.bb_ul li").map(function (i, el) {
-                    content += $(el).text();
+                $(this).after("div.apphub_CardContentNewsDesc").map(function (i, el) {
+                    let content = "";
+                    $(el).find("ul.bb_ul li").map(function (i, el) {
+                        content += $(el).text();
+                    });
+                    if (content == "") {
+                        const clone_content = $(el).find("div.apphub_CardTextContent").clone();
+                        clone_content.children().remove();
+                        content = $(clone_content).text();
+                    }
+                    obj_review.content = content;
                 });
-                if (content == "") {
-                    const clone_content = $(el).find("div.apphub_CardTextContent").clone();
-                    clone_content.children().remove();
-                    content = $(clone_content).text();
-                }
-                obj_review.content = content;
-            });
-            $(this).after("div.apphub_CardContentAuthorBlock").map(function (i, el) {
-                let like = $(el).find("div.apphub_CardRating.news.rateUp").text();
-                obj_review.like = like;
-            });
+                $(this).after("div.apphub_CardContentAuthorBlock").map(function (i, el) {
+                    let like = $(el).find("div.apphub_CardRating.news.rateUp").text();
+                    obj_review.like = like;
+                });
 
-            get_reviews.push(obj_review);
+                news.push(obj_review);
+            });
+            get_news.push(...news);
+        })
+        return get_news;
+    })).then((data) => {
+        // filter the data based on limit and offset
+        let final_data = [];
+        for (x of data) {
+            final_data.push(...x);
+        }
+        final_data = final_data.slice(startskip, final_data.length - endskip);
+
+        return successHandler({
+            req, res, data: {
+                news: final_data,
+                limit,
+                offset
+            }
         });
-        res.send(all_reviews);
-        res.end();
-        next();
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
     });
 }

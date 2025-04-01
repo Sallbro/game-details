@@ -11,32 +11,30 @@ exports.formatQuery = ({ limit, offset } = query) => {
 }
 
 exports.mediaFormatQuery = ({ limit, offset } = query) => {
-    const newpageno = Math.floor(Number(offset) / 10) > 0 ? Math.floor(Number(offset) / 10) : 0;
-    const leave = Math.floor(((Number(offset) / 10) - newpageno) * 10); // fundamental limitation of binary floating-point arithmetics 
+    const startpageno = Math.floor(Number(offset) / 10) + 1;
+    // const endpageno = Math.floor(((Number(offset) / 10) - newpageno) * 10); // fundamental limitation of binary floating-point arithmetics 
+    const leave = Math.abs(((Number(offset) / 10) * 10) - 10);
     const newlimit = Number(limit) + leave;
+    console.log(startpageno, leave);
     return {
-        newpageno,
-        leave,
-        newlimit
+        startpageno, leave, newlimit
     };
 }
 
 exports.reviewFormatQuery = ({ limit, offset } = query) => {
-    const startpageno = Math.ceil(Number(offset) / 10);
-    const endpageno = startpageno + Math.floor(Number(limit) / 10);
-    const leave = ((endpageno * 10) - ((endpageno - startpageno) * 10)) - limit;
-    const startleave = Number(offset) % 10;
-    const endleave = (((endpageno - startpageno+1) * 10) - limit) - startleave;
+    const startpageno = Math.floor(Number(offset) / 10) + 1;
+    const endpageno = startpageno + Math.ceil(Number(limit) / 10);
+    const startskip = Math.floor(offset % 10);
+    const endskip = Math.floor(limit % 10);
 
     return {
         startpageno,
         endpageno,
-        leave,
-        startleave,
-        endleave
-    };
+        startskip,
+        endskip
+    }
 }
 
-exports.formateData=(data)=>{
+exports.formateData = (data) => {
     return data.replace(/\n/g, "").replace(/\r/g, "").replace(/\t/g, "");
 }

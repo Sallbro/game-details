@@ -1,10 +1,19 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
+const { badRequest, successHandler, serverError } = require('../helper/response');
 
 exports.pageNo = async (req, res, next) => {
-    const page_no = req.params.page_no;
+    const { page_no = 1, currency = "US" } = req.params;
+    const currencyArray = ["IN", "US"];
+    if (currency) {
+        if (!currencyArray.includes(currency)) {
+            return badRequest({ req, res, message: "Invalid currency it should be [IN, US]" });
+        }
+    }
     let act_url = process.env['GET_PAGE_URL'];
     act_url = act_url.replace("${page_no}", page_no);
+    act_url = act_url.replace("${currency}", currency);
+
     axios.get(act_url).then((response) => {
         const html = response.data;
         const $ = cheerio.load(html);
@@ -31,12 +40,22 @@ exports.pageNo = async (req, res, next) => {
             page_instance.img = `https://cdn.akamai.steamstatic.com/steam/apps/${id}/header.jpg?t=${optional_id}`;
             pages.push(page_instance);
         });
-        res.send(pages);
-        res.end();
+        const counts = $(".search_pagination > .search_pagination_left").text().trim();
+        const total = counts.match((/(?<=of )\d+/));
+        const total_page = total ? Math.ceil(Number(total[0]) / 25) : "";
+        console.log("counts ", counts);
+        return successHandler({
+            req, res, data: {
+                pages,
+                current_page: Number(page_no),
+                total_page: total_page
+            }
+        });
 
     }).catch((err) => {
-        console.error(err);
-        res.end();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
     });
 
 }

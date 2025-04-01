@@ -1,12 +1,25 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
+const { badRequest, successHandler, serverError } = require('../helper/response');
+const { formatRequirementsApi } = require('../helper/formatData');
 
 exports.single_game = async (req, res, next) => {
 
-    const game_id = req.params.id;
+    const { id, currency = "US" } = req.params;
+    if (!id) {
+        return badRequest({ req, res, message: "Game id is required" });
+    }
+    const currencyArray = ["IN", "US"];
+    if (currency) {
+        if (!currencyArray.includes(currency)) {
+            return badRequest({ req, res, message: "Invalid currency it should be [IN, US]" });
+        }
+    }
+
     // actual url 
     let act_url = process.env['GET_SINGLE_GAME_URL'];
-    act_url = act_url.replace("${game_id}", game_id);
+    act_url = act_url.replace("${game_id}", id);
+    act_url = act_url.replace("${currency}", currency);
 
     let set_header = {
         headers: {
@@ -21,6 +34,11 @@ exports.single_game = async (req, res, next) => {
         // get Game name 
         const name = $("#appHubAppName").text();
         result.name = name;
+
+        // invalid game id
+        if (!name) {
+            return badRequest({ req, res, message: "Game not found" });
+        }
 
         // get Game describtion 
         let desc = $("#game_highlights > div.rightcol > div > div.game_description_snippet").text();
@@ -266,14 +284,14 @@ exports.single_game = async (req, res, next) => {
         about_game = about_game.replace(/\n/g, '');
         result.about_game = about_game;
 
-        res.status(200).send(result);
-        res.end();
-        next();
+        return successHandler({
+            req, res, data: result
+        });
 
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
 
     });
 }
@@ -301,14 +319,14 @@ exports.about_game = async (req, res, next) => {
         about_game = about_game.replace(/\n/g, '');
         result.about_game = about_game;
 
-        res.status(200).send(result);
-        res.end();
-        next();
+        return successHandler({
+            req, res, data: result
+        });
 
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
 
     });
 }
@@ -362,6 +380,7 @@ exports.requirements = async (req, res, next) => {
                         rec_window.push($(this).text());
                     })
                 }
+                
             }
             // get for Linux 
             if ($(this).attr("data-os") == "linux") {
@@ -420,14 +439,18 @@ exports.requirements = async (req, res, next) => {
                 }
             }
         });
-        res.status(200).send(result);
-        res.end();
-        next();
+
+        // format data
+        const forrmatData= formatRequirementsApi(sys_req);
+
+        return successHandler({
+            req, res, data: forrmatData
+        });
 
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
 
     });
 }
@@ -456,14 +479,14 @@ exports.tags = async (req, res, next) => {
             tags.push($(this).text().trim());
         });
 
-        res.status(200).send(result);
-        res.end();
-        next();
+        return successHandler({
+            req, res, data: result
+        });
 
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
 
     });
 }
@@ -492,14 +515,14 @@ exports.languages_supported = async (req, res, next) => {
             $(el).find('td:nth-of-type(1)').text().trim() !== "" ? lang.push($(el).find('td:nth-of-type(1)').text().trim()) : "";
         });
 
-        res.status(200).send(result);
-        res.end();
-        next();
+        return successHandler({
+            req, res, data: result
+        });
 
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
 
     });
 }
@@ -558,15 +581,14 @@ exports.external_links = async (req, res, next) => {
             }
         }
         result.external_links = external_links;
-
-        res.status(200).send(result);
-        res.end();
-        next();
+        return successHandler({
+            req, res, data: result
+        });
 
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
 
     });
 }

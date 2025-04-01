@@ -3,6 +3,7 @@ const axios = require('axios');
 const { reviewFormatQuery, formateData } = require('../helper/formatQuery');
 const { reviewCategory, reviewType, seperator } = require('../helper/enum');
 const { generateId, decodeId, splitUsernameAndId } = require('../helper/convertor');
+const { serverError, successHandler, badRequest } = require('../helper/response');
 
 exports.specificReviews = async (req, res, next) => {
     const id = req.params.id;
@@ -10,21 +11,27 @@ exports.specificReviews = async (req, res, next) => {
     const limit = req.query.limit || 10;
     const offset = req.query.offset || 0;
     const type = req.query.type || "all";
-    const { startpageno, endpageno, startleave, endleave } = reviewFormatQuery({ limit, offset });
+    const language = req.query.language || "english";
+    const { startpageno, endpageno, startskip, endskip } = reviewFormatQuery({ limit, offset });
 
-    // set category of review url
+    // check game id
+    if (!id) {
+        return badRequest({ req, res, message: "Game id is required" });
+    }
+
+    // check category of review 
     const arrayReviewCategory = reviewCategory || [];
     if (!arrayReviewCategory.includes(category)) {
-        res.status(400).send("invalid review category");
+        return badRequest({ req, res, message: "invalid review category" });
     }
 
-    // set category of review url
+    // check type of review 
     const arrayReviewType = reviewType || [];
     if (!arrayReviewType.includes(type)) {
-        res.status(400).send("invalid review type");
+        return badRequest({ req, res, message: "invalid review type" });
     }
 
-    //direct review url
+    // set review url
     let review_url;
     if (type == "negative") {
         review_url = process.env['NEGATIVE_REVIEWS_URL'];
@@ -34,17 +41,17 @@ exports.specificReviews = async (req, res, next) => {
     else {
         review_url = process.env['ALL_REVIEWS_URL'];
     }
-    review_url = review_url.replace(/\${env_reviewcategory}/g, category).replace("${env_game_id}", id);
+    review_url = review_url.replace(/\${env_reviewcategory}/g, category).replace("${env_game_id}", id).replace("${env_language}", language);
 
     // fetch all endpoints url
     let endpoints = [];
-    for (var i = startpageno; i <= endpageno; i++) {
+    for (var i = startpageno; i < endpageno; i++) {
         let env_dir_rev_url = review_url;
         env_dir_rev_url = env_dir_rev_url.replace(/\${env_pageno}/g, i);
         endpoints.push(env_dir_rev_url);
     }
 
-    //start requesting
+    // start requesting
     axios.all(endpoints.map(async (endpoint) => {
         let get_reviews = [];
         await axios.get(endpoint).then((response) => {
@@ -63,13 +70,8 @@ exports.specificReviews = async (req, res, next) => {
                     review_id = review_url_match[1] + seperator + review_url_match[2];
                 }
                 const generateid = generateId(review_id);
-                console.log("generateIds ", generateid);
 
                 const decodeIds = decodeId(generateid);
-                console.log("decodeIds ", decodeIds);
-
-                console.log("review_url ", review_url);
-                console.log("review_id ", review_id);
                 obj_review.review_id = generateid;
 
                 $(this).after("div.apphub_CardContentMain").map(function (i, el) {
@@ -97,18 +99,24 @@ exports.specificReviews = async (req, res, next) => {
         return get_reviews;
     }
     )).then((data) => {
+        // filter the data based on limit and offset
         let final_data = [];
         for (x of data) {
             final_data.push(...x);
         }
-        final_data = final_data.slice(startleave, final_data.length - endleave);
-        res.send(final_data);
-        res.end();
-        next();
+        final_data = final_data.slice(startskip, final_data.length - endskip);
+
+        return successHandler({
+            req, res, data: {
+                reviews: final_data,
+                limit,
+                offset
+            }
+        });
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
     });
 
 }
@@ -117,7 +125,7 @@ exports.reviewById = async (req, res, next) => {
     const review_id = req.params.review_id;
     const decodeid = decodeId(review_id);
     if (!decodeid || !decodeid.includes(seperator)) {
-        res.status(400).send("invalid review id");
+        return badRequest({ req, res, message: "invalid review id" });
     }
     const { username, gameid } = splitUsernameAndId(decodeid);
     let review_url = process.env['SINGLE_REVIEWS_URL'];
@@ -167,25 +175,26 @@ exports.reviewById = async (req, res, next) => {
 
         // playtime
         const playtime = formateData($("div.ratingSummaryBlock > div.ratingSummaryHeader > div.playTime").text().trim());
-        
+
         // rating summary
         const ratingSummary = $("div.ratingSummaryBlock > div.ratingSummaryHeader > div.ratingSummary").text().trim();
-        
+
         // content
         const content = $("div.review_area > div.review_area_content > div#ReviewEdit > textarea").text().trim().replaceAll("\n", " ");
 
         // comment id
-        const fetch_comment_id = $("#comments > div").attr("id");
-        const comment_regex = /commentthread_Recommendation_(\d+)_(\d+)_area/;
-        const comment_match = fetch_comment_id.match(comment_regex);
         let comment_id = "";
-        if (comment_match) {
-            const cmt_id = comment_match[1];
-            const gms_id = comment_match[2];
-            const generateid = generateId(cmt_id.toString() + seperator + gms_id.toString());
-            comment_id = generateid;
+        const fetch_comment_id = $("#comments > div").attr("id");
+        if (fetch_comment_id) {
+            const comment_regex = /commentthread_Recommendation_(\d+)_(\d+)_area/;
+            const comment_match = fetch_comment_id.match(comment_regex);
+            if (comment_match) {
+                const cmt_id = comment_match[1];
+                const gms_id = comment_match[2];
+                const generateid = generateId(cmt_id.toString() + seperator + gms_id.toString());
+                comment_id = generateid;
+            }
         }
-
         // append data to get_reviews object
         get_reviews.user_name = user_name;
         get_reviews.user_profile = user_profile;
@@ -194,15 +203,17 @@ exports.reviewById = async (req, res, next) => {
         get_reviews.rating = rating;
         get_reviews.playtime = playtime;
         get_reviews.content = content;
-        get_reviews.comment_id = comment_id;
+        if (comment_id) {
+            get_reviews.comment_id = comment_id;
+        }
 
-        res.send(get_reviews);
-        res.end();
-        next();
+        return successHandler({
+            req, res, data: get_reviews
+        });
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
     });
 
 }

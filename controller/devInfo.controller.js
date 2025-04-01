@@ -1,9 +1,15 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
+const { successHandler, serverError, badRequest } = require('../helper/response');
 
 exports.franchise = async (req, res, next) => {
 
     const game_id = req.params.id;
+
+    if (!game_id) {
+            return badRequest({ req, res, message: "Game id is required" });
+        }
+
     // actual url 
     let act_url = process.env['GET_SINGLE_GAME_URL'];
     act_url = act_url.replace("${game_id}", game_id);
@@ -32,19 +38,24 @@ exports.franchise = async (req, res, next) => {
 
         });
 
-        res.status(200).send(result);
-        res.end();
-        next();
+        return successHandler({
+            req, res, data: result
+        });
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
     });
 }
 
 exports.developerName = async (req, res, next) => {
 
     const game_id = req.params.id;
+
+    if (!game_id) {
+        return badRequest({ req, res, message: "Game id is required" });
+    }
+
     // actual url 
     let act_url = process.env['GET_SINGLE_GAME_URL'];
     act_url = act_url.replace("${game_id}", game_id);
@@ -74,19 +85,24 @@ exports.developerName = async (req, res, next) => {
         });
         result.developer_name = developer_name;
 
-        res.status(200).send(result);
-        res.end();
-        next();
+        return successHandler({
+            req, res, data: result
+        });
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
     });
 }
 
 exports.publisher = async (req, res, next) => {
 
     const game_id = req.params.id;
+    
+    if (!game_id) {
+        return badRequest({ req, res, message: "Game id is required" });
+    }
+    
     // actual url 
     let act_url = process.env['GET_SINGLE_GAME_URL'];
     act_url = act_url.replace("${game_id}", game_id);
@@ -115,12 +131,12 @@ exports.publisher = async (req, res, next) => {
 
         });
 
-        res.status(200).send(result);
-        res.end();
-        next();
+        return successHandler({
+            req, res, data: result
+        });
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
     });
 }

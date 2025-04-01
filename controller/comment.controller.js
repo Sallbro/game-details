@@ -3,6 +3,7 @@ const axios = require('axios');
 const { reviewFormatQuery } = require('../helper/formatQuery');
 const { seperator } = require('../helper/enum');
 const { decodeId, splitCommentIdAndId } = require('../helper/convertor');
+const { serverError, successHandler } = require('../helper/response');
 
 exports.comments = async (req, res, next) => {
     const comment_id = req.params.comment_id;
@@ -47,13 +48,18 @@ exports.comments = async (req, res, next) => {
             get_comments.push(get_comment);
         });
 
-        res.send(get_comments);
-        res.end();
-        next();
+        return successHandler({
+            req, res, data: {
+                comments: get_comments,
+                total: response.data.total_count,
+                limit: Number(limit),
+                offset: Number(offset)
+            }
+        });
     }).catch((err) => {
-        console.error(err);
-        res.end();
-        next();
+        return serverError({
+            req, res, message: err?.message, error: err
+        });
     });
 
 }
