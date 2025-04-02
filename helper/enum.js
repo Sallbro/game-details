@@ -5,6 +5,8 @@ exports.reviewType = ["negative", "positive","all"];
 
 exports.newsCategory = ["all", "announcements","syndicated"];
 
+exports.guideCategory = ["trend", "toprated", "mostrecent"];
+
 exports.seperator="##$$";
 
 exports.status = {
