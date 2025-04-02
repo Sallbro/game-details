@@ -7,6 +7,7 @@ const guideRouter = require('./guide');
 const devInfoRouter = require('./developerInfo');
 const gameRouter = require('./game');
 const commentRouter = require('./comment');
+const similarGamesRouter = require('./similarGames');
 const v1Router = express.Router();
 
 v1Router.get('/healthcheck', (req, res) => {
@@ -24,6 +25,8 @@ v1Router.use('/media', mediaRouter);
 v1Router.use('/reviews', reviewRouter);
 v1Router.use('/news', newsRouter);
 v1Router.use('/comments', commentRouter);
+v1Router.use('/similargame', similarGamesRouter);
+
 
 
 
