@@ -7,6 +7,8 @@ exports.newsCategory = ["all", "announcements","syndicated"];
 
 exports.guideCategory = ["trend", "toprated", "mostrecent"];
 
+exports.commentCategory = ["review", "guide", "news"];
+
 exports.seperator="##$$";
 
 exports.status = {

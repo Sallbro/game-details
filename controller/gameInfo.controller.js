@@ -163,11 +163,11 @@ exports.single_game = async (req, res, next) => {
         // get screenshot
         const screenshot = [];
         const videos = [];
-        const images = {
+        const media = {
             screenshot: screenshot,
             videos: videos
         }
-        result.images = images;
+        result.media = media;
         const sys_req = {}
         result.sys_req = sys_req;
         $("#highlight_player_area > div > div.screenshot_holder > a").each(function () {

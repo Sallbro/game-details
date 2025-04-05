@@ -18,7 +18,7 @@ function splitUsernameAndId(formattedStr) {
 
 function splitCommentIdAndId(formattedStr) {
     const parts = formattedStr.split(seperator);
-    return { commentid: parts[0], gameid: parts[1] };
+    return { commentid: parts[0], gameid: parts[1], comment_category: parts[2] };
 }
 
 function stringToBase62(str) {
@@ -56,4 +56,4 @@ function base62ToString(encoded) {
     return str;
 }
 
-module.exports = { generateId, decodeId,splitUsernameAndId,splitCommentIdAndId };
+module.exports = { generateId, decodeId, splitUsernameAndId, splitCommentIdAndId };

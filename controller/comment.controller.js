@@ -1,7 +1,7 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
 const { reviewFormatQuery } = require('../helper/formatQuery');
-const { seperator } = require('../helper/enum');
+const { seperator,commentCategory } = require('../helper/enum');
 const { decodeId, splitCommentIdAndId } = require('../helper/convertor');
 const { serverError, successHandler } = require('../helper/response');
 
@@ -16,8 +16,27 @@ exports.comments = async (req, res, next) => {
     if (!decodeid || !decodeid.includes(seperator)) {
         res.status(400).send("invalid review id");
     }
-    const { commentid, gameid } = splitCommentIdAndId(decodeid);
-    let comment_url = process.env['COMMENT_URL'];
+    const { commentid, gameid, comment_category } = splitCommentIdAndId(decodeid);
+
+    if (!commentid || !gameid || !comment_category) {
+        res.status(400).send("invalid review id");
+    }
+
+    if (!commentCategory.includes(comment_category)) {
+        res.status(400).send("invalid review id");
+    }
+
+    // set review url
+    let comment_url;
+    if (comment_category == "review") {
+        comment_url = process.env['REVIEW_COMMENT_URL'];
+    } else if (comment_category == "guide") {
+        comment_url = process.env['GUIDE_COMMENT_URL'];
+    }
+    else {
+        comment_url = process.env['REVIEW_COMMENT_URL'];
+    }
+    // let comment_url = process.env['GUIDE_COMMENT_URL'];
     comment_url = comment_url.replace("${env_game_id}", gameid).replace("${env_comment_id}", commentid);
 
     // fetch review

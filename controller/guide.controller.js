@@ -2,7 +2,8 @@ const cheerio = require('cheerio');
 const axios = require('axios');
 const { reviewFormatQuery } = require('../helper/formatQuery');
 const { successHandler, serverError, badRequest } = require('../helper/response');
-const { guideCategory } = require('../helper/enum');
+const { guideCategory, seperator } = require('../helper/enum');
+const { generateId } = require('../helper/convertor');
 
 exports.guides = async (req, res, next) => {
     const id = req.params.id;
@@ -21,7 +22,7 @@ exports.guides = async (req, res, next) => {
         return badRequest({ req, res, message: "invalid guide category" });
     }
 
-    const { startpageno, endpageno, startskip, endskip } = reviewFormatQuery({ limit, offset});
+    const { startpageno, endpageno, startskip, endskip } = reviewFormatQuery({ limit, offset });
     //direct guide url
     let guides_url = process.env['GUIDE_URL'];
     guides_url = guides_url.replace("${env_game_id}", id).replace(/\${env_guidecategory}/g, category).replace("${env_language}", language);
@@ -61,10 +62,10 @@ exports.guides = async (req, res, next) => {
                     guide.title = guide_title;
 
                     const guide_image = $(el).find("div.apphub_CardContentGuideTitle > img").attr("src");
-                    guide.profile = guide_image;
+                    guide.thumnail = guide_image;
 
-                    const guide_shortdesc = $(el).addClass("div.apphub_CardContentGuideDesc").text().trim().replace(/\n/g, "").replace(/\t/g, "");
-                    guide.short_desc = guide_shortdesc;
+                    const content = $(el).addClass("div.apphub_CardContentGuideDesc").text().trim().replace(/\n/g, "").replace(/\t/g, "");
+                    guide.content = content;
                     get_guides.push(guide);
                 });
             });
@@ -111,15 +112,29 @@ exports.fullGuide = async (req, res, next) => {
         const postdate = $("div.rightDetailsBlock > div.detailsStatsContainerRight > div.detailsStatRight").text();
         const author = $("div.guideTopContent > div.guideAuthors").text();
         const title = $("div.guideTopContent > div.workshopItemTitle").text();
-        const short_desc = $("div.guideTopContent > div.guideTopDescription").text();
-        const full_desc = $("div.guide > div.subSection > div.subSectionDesc > b").html()?.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '');
+        const content = $("div.guideTopContent > div.guideTopDescription").text();
+        // const content = $("div.guide > div.subSection > div.subSectionDesc > b").html()?.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '');
 
+        // comment id
+        let comment_id = "";
+        const fetch_comment_id = $("div.commentthread_area").attr("id");
+        if (fetch_comment_id) {
+            const comment_regex = /commentthread_PublishedFile_Public_(\d+)_(\d+)_area/;
+            const comment_match = fetch_comment_id.match(comment_regex);
+            if (comment_match) {
+                const cmt_id = comment_match[1];
+                const gms_id = comment_match[2];
+                const generateid = generateId(cmt_id.toString() + seperator + gms_id.toString() + seperator + "guide");
+                comment_id = generateid;
+            }
+        }
+
+        get_guide.comment_id = comment_id;
         get_guide.guide_id = guide_id;
         get_guide.postdate = postdate;
         get_guide.author = author;
         get_guide.title = title;
-        get_guide.desc = short_desc;
-        get_guide.full_desc = full_desc;
+        get_guide.content = content;
 
         return successHandler({
             req, res, data: {

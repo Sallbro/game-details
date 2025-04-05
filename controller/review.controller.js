@@ -67,11 +67,10 @@ exports.specificReviews = async (req, res, next) => {
                 const review_url_match = review_url?.match(review_url_regex);
                 let review_id = '';
                 if (review_url_match) {
-                    review_id = review_url_match[1] + seperator + review_url_match[2];
+                    review_id = review_url_match[1] + seperator + review_url_match[2] + seperator + "review";
                 }
                 const generateid = generateId(review_id);
 
-                const decodeIds = decodeId(generateid);
                 obj_review.review_id = generateid;
 
                 $(this).after("div.apphub_CardContentMain").map(function (i, el) {
