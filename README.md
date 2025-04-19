@@ -1,4 +1,10 @@
-# game_api
-selling api on rapidapi
+# Games Details - API
+🚀 Game Details – User Guide
+Welcome to the Game Details! This API helps you access detailed information about video games using data powered by the Game Details API.
+
+⚙️ All data (games, media, news, reviews, etc.) is fetched in real-time from  Game Details to ensure accuracy and freshness.
+
+> Renting api on rapidapi platform
 > checkout: https://rapidapi.com/asusalman986/api/games-details/
-![api_img](https://github.com/Sallbro/game_api/assets/80574589/2a6f02eb-3f74-42aa-b872-bbc23ad7abe4)
+
+> documentation: https://documenter.getpostman.com/view/21420202/2sB2cd5dcu
