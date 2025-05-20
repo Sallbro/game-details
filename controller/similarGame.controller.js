@@ -30,11 +30,20 @@ exports.similarGames = async (req, res, next) => {
         const html = response.data;
         const $ = cheerio.load(html);
         const result = [];
-
+        
         $("div#released > div.similar_grid_item").each(function () {
             const id = $(this).find("a").attr("data-ds-appid");
             const image = $(this).find("a > img").attr("src");
             let price = $(this).find("div > div.regular_price").text().trim();
+            let gameName = "";
+
+            // get game name
+            const name = $(this).find("a").attr("href");
+            const match = name.match(/\/app\/\d+\/([^\/\?]+)/);
+            if (match) {
+                const rawName = match[1];
+                gameName = rawName.replace(/_/g, ' ');
+            }
 
             // Handle empty price values
             if (!price) {
@@ -44,7 +53,8 @@ exports.similarGames = async (req, res, next) => {
             result.push({
                 id: id,
                 image: image,
-                price: price
+                price: price,
+                name: gameName
             });
         });
         return successHandler({
